@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+.turbo/
+
+# Web (Vite)
+apps/web/dist/
+
+# Mobile (Expo)
+apps/mobile/.expo/
+apps/mobile/dist/
+apps/mobile/web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
