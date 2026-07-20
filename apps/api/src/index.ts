@@ -4,13 +4,23 @@ import dotenv from "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { HealthCheckSchema } from "@nutrisync/shared";
+import cookieParser from "cookie-parser";
+import { HealthCheckSchema, type AuthResponse } from "@nutrisync/shared";
 import { connectToDatabase } from "./db.js";
+import { assertJwtSecretConfigured } from "./lib/jwt.js";
+import { authRouter } from "./routes/auth.routes.js";
+import { goalsRouter } from "./routes/goals.routes.js";
+import { requireAuth, type AuthenticatedRequest } from "./middleware/require-auth.js";
+import { UserModel } from "./models/user.model.js";
 
 // Load the repo-root .env regardless of whether this runs from src (tsx)
 // or dist (node) — both live exactly two levels below the repo root.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+
+// Fail fast: signing/verifying JWTs with an undefined secret is worse than
+// starting up and silently minting untrustworthy tokens.
+assertJwtSecretConfigured();
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -37,6 +47,9 @@ app.use(
   }),
 );
 
+app.use(express.json());
+app.use(cookieParser());
+
 app.get("/health", (_req, res) => {
   const body = HealthCheckSchema.parse({
     status: "ok",
@@ -44,6 +57,28 @@ app.get("/health", (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 
+  res.json(body);
+});
+
+app.use("/api/auth", authRouter);
+app.use("/api/goals", goalsRouter);
+
+app.get("/api/me", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const user = await UserModel.findById(req.user!.id);
+  if (!user) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const body: AuthResponse = {
+    user: {
+      id: String(user._id),
+      email: user.email,
+      name: user.name,
+      familyGroupId: String(user.familyGroupId),
+      role: user.role as "owner" | "member",
+      createdAt: user.createdAt.toISOString(),
+    },
+  };
   res.json(body);
 });
 
