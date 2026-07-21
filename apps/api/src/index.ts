@@ -23,6 +23,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 assertJwtSecretConfigured();
 
 const app = express();
+console.log(`[api] process.env.PORT = ${process.env.PORT}`);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
 // Pure JSON API today, no server-rendered HTML/assets — helmet's strict
@@ -95,7 +96,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(port, () => {
-  console.log(`[api] listening on http://localhost:${port}`);
+  console.log(`[api] listening on 0.0.0.0:${port}`);
 });
 
 // Connecting to MongoDB is best-effort at startup so the API stays usable
