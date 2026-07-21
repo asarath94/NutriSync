@@ -44,6 +44,9 @@ app.use(
       }
       callback(new Error(`Origin ${origin} is not allowed by CORS`));
     },
+    // apps/web sends the httpOnly auth cookie via credentials:'include' -
+    // without this, the browser drops the Set-Cookie/cookie header entirely.
+    credentials: true,
   }),
 );
 
